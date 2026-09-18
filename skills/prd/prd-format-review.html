@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PRD Format — Bảng duyệt cấu trúc</title>
+<style>
+  :root{
+    --bg:#0f1115; --panel:#171a21; --panel2:#1e222b; --border:#2a2f3a;
+    --text:#e7e9ee; --muted:#9aa3b2; --accent:#5b8cff; --accent2:#7c5cff;
+    --keep:#2ea043; --remove:#e5534b; --add:#3fa7d6; --modify:#d9a441;
+    --chip-bg:#232833;
+  }
+  @media (prefers-color-scheme: light){
+    :root{
+      --bg:#f5f6f8; --panel:#ffffff; --panel2:#f0f2f5; --border:#dfe3ea;
+      --text:#1b1f27; --muted:#5c6472; --chip-bg:#eef1f5;
+    }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font:15px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:0 0 80px}
+  .wrap{max-width:1080px;margin:0 auto;padding:24px 20px}
+  h1{font-size:24px;margin:0 0 4px}
+  .sub{color:var(--muted);margin:0 0 18px}
+  .callout{background:linear-gradient(135deg,rgba(124,92,255,.12),rgba(91,140,255,.10));
+    border:1px solid var(--border);border-left:3px solid var(--accent2);
+    border-radius:12px;padding:14px 16px;margin:0 0 20px}
+  .callout h3{margin:0 0 8px;font-size:15px}
+  .callout ol{margin:6px 0 0;padding-left:20px}
+  .callout li{margin:4px 0;color:var(--text)}
+  .callout em{color:var(--muted);font-style:normal}
+  .legend{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 16px}
+  .legend .chip{font-size:12px;padding:3px 9px;border-radius:20px;background:var(--chip-bg);
+    border:1px solid var(--border);color:var(--muted)}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:0 0 16px}
+  .counts{color:var(--muted);font-size:13px;margin-left:auto}
+  .counts b{color:var(--text)}
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:12px;
+    margin:0 0 12px;padding:14px 16px;position:relative;transition:opacity .15s,border-color .15s}
+  .card[data-decision="remove"]{opacity:.55;border-color:var(--remove)}
+  .card[data-decision="add"]{border-color:var(--add)}
+  .card[data-decision="modify"]{border-color:var(--modify)}
+  .card[data-decision="keep"]{border-color:var(--keep)}
+  .card-head{display:flex;align-items:flex-start;gap:12px}
+  .ord{flex:0 0 auto;display:flex;flex-direction:column;align-items:center;gap:2px;
+    background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:4px 6px;min-width:44px}
+  .ord .num{font-weight:700;font-size:15px}
+  .ord button{all:unset;cursor:pointer;color:var(--muted);font-size:12px;line-height:1;padding:1px 4px;border-radius:4px}
+  .ord button:hover{color:var(--text);background:var(--chip-bg)}
+  .titleblock{flex:1 1 auto;min-width:0}
+  .titleblock .name{font-weight:650;font-size:15.5px}
+  .badge{display:inline-block;font-size:11px;font-weight:600;padding:2px 8px;border-radius:20px;margin-left:8px;vertical-align:middle}
+  .b-exist{background:rgba(94,120,160,.18);color:#9db4d8}
+  .b-new{background:rgba(63,167,214,.18);color:#7fd0ef}
+  .b-excl{background:rgba(229,83,75,.15);color:#f0938d}
+  .role{color:var(--muted);font-size:13px;margin:4px 0 0}
+  .rec{margin:8px 0 0;font-size:13.5px;background:var(--panel2);border-radius:8px;padding:8px 10px;border:1px solid var(--border)}
+  .rec b{color:var(--accent)}
+  .decisions{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 0}
+  .decisions button{all:unset;cursor:pointer;font-size:12.5px;font-weight:600;padding:5px 12px;
+    border-radius:8px;border:1px solid var(--border);color:var(--muted);background:transparent}
+  .decisions button:hover{color:var(--text)}
+  .decisions button.on[data-v="keep"]{background:var(--keep);color:#fff;border-color:var(--keep)}
+  .decisions button.on[data-v="remove"]{background:var(--remove);color:#fff;border-color:var(--remove)}
+  .decisions button.on[data-v="modify"]{background:var(--modify);color:#111;border-color:var(--modify)}
+  .decisions button.on[data-v="add"]{background:var(--add);color:#fff;border-color:var(--add)}
+  .note{margin:10px 0 0}
+  .note textarea{width:100%;background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:8px 10px;font:inherit;font-size:13px;resize:vertical;min-height:34px}
+  .note textarea::placeholder{color:var(--muted)}
+  .del{position:absolute;top:12px;right:12px;all:unset;cursor:pointer;color:var(--muted);font-size:16px}
+  .del:hover{color:var(--remove)}
+  .addbox{background:var(--panel);border:1px dashed var(--border);border-radius:12px;padding:16px;margin:18px 0}
+  .addbox h3{margin:0 0 10px;font-size:15px}
+  .addbox .row{display:flex;gap:10px;flex-wrap:wrap}
+  .addbox input{flex:1 1 200px;background:var(--panel2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:8px 10px;font:inherit}
+  .btn{all:unset;cursor:pointer;background:var(--accent);color:#fff;font-weight:600;font-size:13.5px;
+    padding:8px 16px;border-radius:8px;text-align:center}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+  .btn:hover{filter:brightness(1.08)}
+  .out{margin-top:20px}
+  .out textarea{width:100%;min-height:240px;background:var(--panel2);color:var(--text);
+    border:1px solid var(--border);border-radius:10px;padding:12px;font:12.5px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace}
+  .sechead{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);
+    margin:22px 0 8px;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>PRD Format — Bảng duyệt cấu trúc</h1>
+  <p class="sub">Phân tách toàn bộ phần của skill <code>/prd</code>. Với mỗi phần: chọn <b>Giữ / Bỏ / Sửa / Thêm</b>, chỉnh vị trí bằng mũi tên, ghi chú. Quyết định tự lưu trong trình duyệt. Xong bấm <b>Xuất quyết định</b> ở cuối và gửi lại cho em.</p>
+
+  <div class="callout">
+    <h3>⚠️ Phản biện trước khi anh duyệt (nỗi đau #1 — giữ lý do quyết định)</h3>
+    <ol>
+      <li><b>Đây là đảo ngược 1 quyết định đã chốt.</b> Skill + 4 memory ghi rõ "PRD = WHAT, không HOW; technical để Dev Agent". <em>→ Anh xác nhận muốn đảo, hay chỉ cần lớp "Technical Notes" nhẹ?</em></li>
+      <li><b>BA-agent viết API/DB không đọc code sẽ bịa schema.</b> <em>→ Nếu thêm, em sẽ ép rule "bắt buộc đọc code master trước, chỉ ghi cái verify được, phần chưa rõ đánh dấu ⚠️ open-question".</em></li>
+      <li><b>"UI Flow" (3.3) và "Design Description" (5) đang trùng vai ~60%.</b> <em>→ Thêm phần mới thì nên gộp 2 phần này để PRD khỏi phình.</em></li>
+    </ol>
+  </div>
+
+  <div class="legend">
+    <span class="chip">🟦 Đang có = phần hiện tại trong skill</span>
+    <span class="chip">🟩 Đề xuất THÊM = phần technical mới (API/DB)</span>
+    <span class="chip">🟥 Đang loại trừ = skill hiện đang cấm, nay xét thêm lại</span>
+  </div>
+
+  <div class="bar">
+    <button class="btn ghost" id="reset">↺ Reset về mặc định</button>
+    <div class="counts" id="counts"></div>
+  </div>
+
+  <div id="list"></div>
+
+  <div class="addbox">
+    <h3>➕ Thêm phần thủ công</h3>
+    <div class="row">
+      <input id="mName" placeholder="Tên phần (vd: Success Metrics, Rollout Plan...)">
+      <input id="mDesc" placeholder="Mô tả ngắn / nội dung phần này chứa gì">
+      <button class="btn" id="mAdd">Thêm</button>
+    </div>
+  </div>
+
+  <div class="out">
+    <div class="bar">
+      <button class="btn" id="export">📤 Xuất quyết định</button>
+      <button class="btn ghost" id="copy">📋 Copy</button>
+    </div>
+    <textarea id="output" placeholder="Bấm 'Xuất quyết định' để tạo bản tóm tắt anh gửi lại cho em..." readonly></textarea>
+  </div>
+</div>
+
+<script>
+const KEY = 'prd-format-review-v1';
+
+// ---- Dữ liệu mặc định: các phần PRD ----
+const DEFAULT = [
+  // EXISTING
+  {id:'history', name:'Header — History table', kind:'exist', role:'Bảng lịch sử phiên bản (A/M/D).',
+   rec:'<b>Giữ.</b> Chi phí thấp, giúp trace thay đổi. Rủi ro: hay quên update → chấp nhận được.', dec:'keep'},
+  {id:'toc', name:'Header — Mục Lục (Table of Contents)', kind:'exist', role:'Danh sách anchor link tới các mục.',
+   rec:'<b>Cân nhắc BỎ.</b> Doc sống, ToC hay bị lệch số mục sau khi sửa. Ít giá trị khi PRD ngắn. Đây là ứng viên "không cần thiết".', dec:'remove'},
+  {id:'exec', name:'1. Executive Summary', kind:'exist', role:'3–5 bullet: vấn đề / giải pháp / đối tượng / business value / scope.',
+   rec:'<b>Giữ.</b> Phần giá trị cao nhất cho người đọc nhanh.', dec:'keep'},
+  {id:'persona', name:'2. Personas & User Stories', kind:'exist', role:'Bảng persona + user stories "Là 1 [role]...".',
+   rec:'<b>Giữ.</b> Cân nhắc SỬA: personas hay bị viết thừa cho feature nhỏ → cho phép rút gọn/bỏ persona khi feature đơn giản.', dec:'keep'},
+  {id:'overview', name:'3.1–3.2 Product Solutions: Overview + Scope', kind:'exist', role:'Mô tả feature làm gì + trong/ngoài scope.',
+   rec:'<b>Giữ.</b> Lõi của PRD.', dec:'keep'},
+  {id:'uiflow', name:'3.3 UI Flow (ASCII + bảng action→result)', kind:'exist', role:'Từng màn hình, ASCII mockup, bảng hành động.',
+   rec:'<b>Giữ</b> — nhưng xem mục "Design Description" bên dưới: 2 phần này trùng vai, nên chọn gộp.', dec:'keep'},
+  {id:'messages', name:'3.4–3.5 Error / Success Messages', kind:'exist', role:'2 bảng riêng cho message lỗi và message thành công.',
+   rec:'<b>Cân nhắc SỬA:</b> gộp thành 1 bảng "Messages" (cột Type = Error/Success) cho gọn.', dec:'keep'},
+  {id:'ac', name:'4. Acceptance Criteria + Edge Cases', kind:'exist', role:'Bullet testable theo user story + edge cases.',
+   rec:'<b>Giữ.</b> Bắt buộc cho dev/QA.', dec:'keep'},
+  {id:'design', name:'5. Design Description (bảng UI spec)', kind:'exist', role:'Bảng Item/DataType/Required/Default/Mô tả/Validate cho từng component.',
+   rec:'<b>Xét kỹ:</b> trùng ~60% với UI Flow (3.3). <b>Đề xuất gộp</b> UI Flow + Design Description thành 1 phần "UI & Interaction", tránh viết 2 lần.', dec:'modify'},
+  {id:'legal', name:'6. Legal & Compliance (điều kiện)', kind:'exist', role:'Bối cảnh pháp lý + bảng quy định. Chỉ khi feature liên quan compliance.',
+   rec:'<b>Giữ.</b> Đúng, có điều kiện.', dec:'keep'},
+  {id:'impact', name:'7. Impact Analysis', kind:'exist', role:'Bảng các phần app khác cần update (Pricing/Settings/...).',
+   rec:'<b>Giữ.</b> Ngăn miss dependency khi ship.', dec:'keep'},
+
+  // PROPOSED NEW — TECHNICAL (yêu cầu của anh)
+  {id:'datamodel', name:'★ Data Model / Database (DB)', kind:'new', role:'Entities cần lưu, field, kiểu dữ liệu, quan hệ, storage (Firestore/BigQuery), retention.',
+   rec:'<b>THÊM (yêu cầu của anh).</b> Rule đề xuất: BA ghi <b>data requirements</b> (cần lưu field gì, retention bao lâu) — <b>KHÔNG</b> tự chế schema/index. Nếu đụng schema thật phải đọc code master + đánh dấu ⚠️ chỗ chưa chắc để Dev chốt.', dec:'add'},
+  {id:'api', name:'★ API / Integration', kind:'new', role:'Endpoint chính, request/response mẫu, webhook, tích hợp bên thứ 3 (Shopify API, ESP...).',
+   rec:'<b>THÊM (yêu cầu của anh).</b> Rule đề xuất: mô tả <b>capability cần</b> (app cần gọi gì, nhận webhook nào) ở mức contract — chi tiết payload/auth để Dev hoàn thiện. Grounding bắt buộc.', dec:'add'},
+  {id:'techconstraints', name:'Technical Constraints & Dependencies (tùy chọn)', kind:'new', role:'Ràng buộc kỹ thuật, phụ thuộc hệ thống, giới hạn (rate limit, plan-gate kỹ thuật).',
+   rec:'<b>Tùy chọn.</b> Nếu anh chỉ cần "chỗ ghi lưu ý kỹ thuật" thì phần này nhẹ hơn API+DB đầy đủ. Có thể dùng thay cho việc mở full technical.', dec:'remove'},
+  {id:'openq', name:'Open Questions for Dev (tùy chọn)', kind:'new', role:'Danh sách câu hỏi kỹ thuật chưa chốt, cần Dev trả lời trước khi build.',
+   rec:'<b>Tùy chọn — em recommend.</b> Đây thường là thứ PO thật sự thiếu (chứ không phải full API/DB). Nhẹ, ít rủi ro bịa, giải đúng "dev hỏi lại cùng câu".', dec:'add'},
+];
+
+let items = load();
+
+function load(){
+  try{ const s = JSON.parse(localStorage.getItem(KEY)); if(Array.isArray(s)&&s.length) return s; }catch(e){}
+  return JSON.parse(JSON.stringify(DEFAULT));
+}
+function save(){ localStorage.setItem(KEY, JSON.stringify(items)); }
+
+const DEC = [['keep','Giữ'],['modify','Sửa'],['add','Thêm'],['remove','Bỏ']];
+const list = document.getElementById('list');
+
+function render(){
+  list.innerHTML='';
+  items.forEach((it,i)=>{
+    const c = document.createElement('div');
+    c.className='card'; c.dataset.decision = it.dec;
+    const badge = it.kind==='new' ? '<span class="badge b-new">Đề xuất THÊM</span>'
+              : it.kind==='manual' ? '<span class="badge b-new">Thêm thủ công</span>'
+              : it.kind==='excl' ? '<span class="badge b-excl">Đang loại trừ</span>'
+              : '<span class="badge b-exist">Đang có</span>';
+    c.innerHTML = `
+      <button class="del" title="Xoá card khỏi bảng">✕</button>
+      <div class="card-head">
+        <div class="ord">
+          <button data-up>▲</button>
+          <span class="num">${i+1}</span>
+          <button data-down>▼</button>
+        </div>
+        <div class="titleblock">
+          <span class="name">${esc(it.name)}</span>${badge}
+          <div class="role">${esc(it.role||'')}</div>
+          ${it.rec?`<div class="rec">${it.rec}</div>`:''}
+          <div class="decisions">
+            ${DEC.map(([v,l])=>`<button data-v="${v}" class="${it.dec===v?'on':''}">${l}</button>`).join('')}
+          </div>
+          <div class="note"><textarea placeholder="Ghi chú của anh cho phần này (vị trí mong muốn, cách viết, điều kiện...)">${esc(it.note||'')}</textarea></div>
+        </div>
+      </div>`;
+    // handlers
+    c.querySelector('.del').onclick=()=>{ items.splice(i,1); save(); render(); };
+    c.querySelector('[data-up]').onclick=()=>{ if(i>0){ [items[i-1],items[i]]=[items[i],items[i-1]]; save(); render(); } };
+    c.querySelector('[data-down]').onclick=()=>{ if(i<items.length-1){ [items[i+1],items[i]]=[items[i],items[i+1]]; save(); render(); } };
+    c.querySelectorAll('.decisions button').forEach(b=> b.onclick=()=>{ it.dec=b.dataset.v; save(); render(); });
+    c.querySelector('textarea').oninput=e=>{ it.note=e.target.value; save(); };
+    list.appendChild(c);
+  });
+  updateCounts();
+}
+function updateCounts(){
+  const n = v => items.filter(x=>x.dec===v).length;
+  document.getElementById('counts').innerHTML =
+    `Tổng <b>${items.length}</b> · Giữ <b>${n('keep')}</b> · Sửa <b>${n('modify')}</b> · Thêm <b>${n('add')}</b> · Bỏ <b>${n('remove')}</b>`;
+}
+function esc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+document.getElementById('mAdd').onclick=()=>{
+  const name=document.getElementById('mName').value.trim();
+  const desc=document.getElementById('mDesc').value.trim();
+  if(!name) return;
+  items.push({id:'m'+Date.now(), name, kind:'manual', role:desc, rec:'', dec:'add', note:''});
+  document.getElementById('mName').value=''; document.getElementById('mDesc').value='';
+  save(); render();
+};
+document.getElementById('reset').onclick=()=>{
+  if(confirm('Reset toàn bộ về mặc định? Mọi chỉnh sửa & ghi chú sẽ mất.')){
+    items=JSON.parse(JSON.stringify(DEFAULT)); save(); render();
+  }
+};
+document.getElementById('export').onclick=()=>{
+  const lbl={keep:'GIỮ',modify:'SỬA',add:'THÊM',remove:'BỎ'};
+  let o='# QUYẾT ĐỊNH FORMAT PRD (thứ tự = vị trí cuối)\n\n';
+  items.forEach((it,i)=>{
+    o+=`${i+1}. [${lbl[it.dec]}] ${it.name}`;
+    if(it.kind==='new')o+='  (technical mới)';
+    if(it.kind==='manual')o+='  (thêm thủ công)';
+    o+='\n';
+    if(it.note) o+=`   ↳ ghi chú: ${it.note}\n`;
+  });
+  const keep=items.filter(x=>['keep','modify','add'].includes(x.dec));
+  o+=`\n# CẤU TRÚC PRD MỚI (${keep.length} phần, theo thứ tự):\n`;
+  keep.forEach((it,i)=> o+=`${i+1}. ${it.name}${it.dec==='modify'?' (sửa)':it.dec==='add'?' (mới)':''}\n`);
+  const rm=items.filter(x=>x.dec==='remove');
+  if(rm.length){ o+=`\n# BỎ:\n`; rm.forEach(it=> o+=`- ${it.name}\n`); }
+  document.getElementById('output').value=o;
+};
+document.getElementById('copy').onclick=()=>{
+  const t=document.getElementById('output');
+  if(!t.value){ document.getElementById('export').click(); }
+  t.select(); document.execCommand('copy');
+  document.getElementById('copy').textContent='✅ Đã copy';
+  setTimeout(()=>document.getElementById('copy').textContent='📋 Copy',1500);
+};
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,89 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Flow Plan Schema",
+  "description": "Plan máy-đọc-được cho Flow 0-6. Orchestrator sinh plan này TRƯỚC khi fan-out spawn agents, in ra cho user duyệt ([ACCEPTED]/[EDIT_PLAN]), rồi dispatcher chạy theo steps. Adapt từ deer-flow Plan/Step. Lưu bản điền vào STATE.ACTIVE để resumable.",
+  "type": "object",
+  "required": ["flow", "app", "feature", "auto_accept", "steps"],
+  "properties": {
+    "flow": { "type": "string", "enum": ["flow-0","flow-1","flow-2","flow-3","flow-4","flow-5","flow-6","flow-support"], "description": "Workflow nào" },
+    "app": { "type": "string", "enum": ["OL","CB","AC","AV","FF","WF"] },
+    "feature": { "type": "string" },
+    "feature_type": { "type": "string", "enum": ["New Feature","New Function","Improvement"], "description": "Hỏi nếu chưa rõ (Flow 0)" },
+
+    "backlog": {
+      "type": "object",
+      "description": "Kết quả Pre-flight đọc Feature Backlog/List feature.md. Truyền vào MỌI agent prompt.",
+      "properties": {
+        "found": { "type": "boolean" },
+        "description": { "type": "string" },
+        "note": { "type": "string", "description": "Hướng dẫn đặc biệt, Figma link, constraints" },
+        "priority": { "type": "string" },
+        "level": { "type": "string" }
+      },
+      "required": ["found"]
+    },
+
+    "has_enough_context": { "type": "boolean", "default": false,
+      "description": "deer-flow pattern: nếu đủ context → có thể skip step research, nhảy bước sau. Tiêu chí NGHIÊM: chỉ true khi chắc chắn." },
+
+    "auto_accept": { "type": "boolean", "default": false,
+      "description": "true = bỏ qua checkpoint duyệt plan (cho autopilot L3 unattended). Mặc định false → luôn hỏi user [ACCEPTED]/[EDIT_PLAN] trước khi chạy." },
+
+    "multi_prd": {
+      "type": "object",
+      "description": "Khi user yêu cầu tách PRD (Flow 0 Multi-PRD Support)",
+      "properties": {
+        "enabled": { "type": "boolean", "default": false },
+        "count": { "type": "integer" },
+        "split": { "type": "array", "items": { "type": "string" }, "description": "Tên mỗi PRD con + dependency" }
+      }
+    },
+
+    "exceptions": {
+      "type": "array", "items": { "type": "string" },
+      "description": "Ngoại lệ scope user chốt, vd 'Sync font KHÔNG cần User Guide', 'bỏ Phase 3 dev prototype'"
+    },
+
+    "hard_gates": {
+      "type": "array",
+      "description": "Mốc LUÔN dừng hỏi người, kể cả AUTO MODE. Hiển thị trong plan để user biết trước sẽ bị hỏi ở đâu.",
+      "items": { "type": "string", "enum": ["notion_position","dev_assignee","error","qa_below_60","scope_change","prd_ui_inconsistency"] }
+    },
+
+    "steps": {
+      "type": "array",
+      "description": "Danh sách step. Dispatcher chạy step chưa có result, route theo `type` qua routing table.",
+      "items": {
+        "type": "object",
+        "required": ["id", "phase", "title", "type"],
+        "properties": {
+          "id": { "type": "string", "description": "vd '1.1', '3.4'" },
+          "phase": { "type": "integer", "description": "1-5 cho Flow 0" },
+          "title": { "type": "string" },
+          "type": { "type": "string",
+            "enum": ["research","review","prd","design","code","content","verify","fix","logistics","jira","report","self"],
+            "description": "ROUTING KEY → map sang agent+skill qua routing table trong orchestrator" },
+          "agent": { "type": "string", "description": "Override agent nếu khác mặc định của type" },
+          "skill": { "type": "string", "description": "Override skill nếu khác mặc định" },
+          "mcp": { "type": "array", "items": { "type": "string" },
+            "description": "MCP whitelist per-step (deer-flow enabled_tools). CHỈ nạp MCP này, không mở toàn bộ." },
+          "depends_on": { "type": "array", "items": { "type": "string" }, "description": "id các step phải xong trước" },
+          "parallel_group": { "type": "string", "description": "Step cùng group chạy song song (vd team review Phase 2)" },
+          "need_human": { "type": "boolean", "default": false, "description": "Dừng hỏi người trước step này (bỏ qua nếu auto_accept)" },
+          "verifier": { "type": "boolean", "default": false, "description": "Chạy loop-verifier gate sau step này (REJECT → vòng fix quay lại step review gốc, quá max_iterations → ESCALATE_HUMAN). BẮT BUỘC true cho type=code|design (khớp loop-verifier SKILL) — dispatcher tự bật nếu plan quên." },
+          "conditional": { "type": "string", "description": "Điều kiện chạy, vd 'chỉ khi review có issues'" },
+          "status": { "type": "string", "enum": ["pending","running","done","skipped","rejected"], "default": "pending" },
+          "result": { "type": ["string","null"], "default": null, "description": "Output/đường dẫn file sau khi step xong. Tích lũy cho step sau (deer-flow execution_res)." }
+        }
+      }
+    },
+
+    "guardrail": {
+      "type": "object",
+      "properties": {
+        "max_iterations": { "type": "integer", "default": 3, "description": "Chống loop vô hạn ở các vòng fix/review" },
+        "stop_on_qa_below": { "type": "integer", "default": 60 }
+      }
+    }
+  }
+}
